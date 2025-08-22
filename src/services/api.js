@@ -44,19 +44,23 @@ export const deleteFolder = (id) =>
 // ===== FILES =====
 export const fetchFiles = () => handleRequest(axiosInstance.get("/files"));
 
-// metadata-only upload to match your current backend
+// file upload with FormData (required by backend)
 export const uploadFile = async (file, folderId = "") => {
   if (!file) throw new Error("File is required");
 
-  const res = await axiosInstance.post("/files/upload", {
-    name: file.name,
-    folder_id: folderId || null,
+  const formData = new FormData();
+  formData.append("file", file);               // actual file
+  formData.append("name", file.name);          // required by backend
+  formData.append("folder_id", folderId || ""); // optional folder
+
+  const res = await axiosInstance.post("/files/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
 
   return res.data;
 };
 
 export const deleteFile = (id, hard = false) => {
-  const url = hard ? `/files/hard-delete/${id}` : `/files/delete/${id}`;
+  const url = hard ? `/files/hard-delete/${id}` : `/files/${id}`;
   return handleRequest(axiosInstance.delete(url));
 };
