@@ -1,12 +1,12 @@
 import axios from "axios";
 
-// Update this to your deployed backend URL
-const API_URL = "https://drive-clone-backend-qsyp.onrender.com/api";
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://drive-clone-backend-qsyp.onrender.com/api"
+    : "http://localhost:5000/api";
 
-// Get token from localStorage
 const getToken = () => localStorage.getItem("token");
 
-// Create Axios instance
 const axiosInstance = axios.create({ baseURL: API_URL });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -35,34 +35,28 @@ export const loginUser = (email, password) =>
 // ===== FOLDERS =====
 export const fetchFolders = () => handleRequest(axiosInstance.get("/folders"));
 
-export const createFolder = (name) => {
-  if (!name.trim()) throw new Error("Folder name is required");
-  return handleRequest(axiosInstance.post("/folders", { name }));
-};
+export const createFolder = (name) =>
+  handleRequest(axiosInstance.post("/folders", { name }));
 
-export const deleteFolder = (id) => {
-  if (!id) throw new Error("Folder ID is required");
-  return handleRequest(axiosInstance.delete(`/folders/hard-delete/${id}`));
-};
+export const deleteFolder = (id) =>
+  handleRequest(axiosInstance.delete(`/folders/hard-delete/${id}`));
 
 // ===== FILES =====
 export const fetchFiles = () => handleRequest(axiosInstance.get("/files"));
 
-export const uploadFile = async (file, folderId = null) => {
+// metadata-only upload to match your current backend
+export const uploadFile = async (file, folderId = "") => {
   if (!file) throw new Error("File is required");
-  const formData = new FormData();
-  formData.append("file", file);
-  if (folderId) formData.append("folderId", folderId);
 
-  const res = await axiosInstance.post("/files/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const res = await axiosInstance.post("/files/upload", {
+    name: file.name,
+    folder_id: folderId || null,
   });
 
-  return res.data.file; // return the newly uploaded file
+  return res.data;
 };
 
 export const deleteFile = (id, hard = false) => {
-  if (!id) throw new Error("File ID is required");
   const url = hard ? `/files/hard-delete/${id}` : `/files/delete/${id}`;
   return handleRequest(axiosInstance.delete(url));
 };

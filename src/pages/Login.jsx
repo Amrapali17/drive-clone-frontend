@@ -1,11 +1,20 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { loginUser } from "../services/api";
 
 export default function Login({ setToken }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,13 +24,18 @@ export default function Login({ setToken }) {
     }
 
     try {
+      setLoading(true);
       const data = await loginUser(email, password);
+
       localStorage.setItem("token", data.token);
       setToken(data.token);
+
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,10 +66,21 @@ export default function Login({ setToken }) {
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-blue-700 py-2 rounded hover:bg-blue-800 transition"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
+
+        <p className="mt-4 text-center text-gray-400">
+          Don't have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-blue-400 hover:underline"
+          >
+            Create Account
+          </Link>
+        </p>
       </form>
     </div>
   );

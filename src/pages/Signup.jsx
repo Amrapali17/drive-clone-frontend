@@ -1,12 +1,14 @@
 // src/pages/Signup.jsx
 import React, { useState } from "react";
 import { signupUser } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -18,11 +20,10 @@ export default function Signup() {
     try {
       setLoading(true);
       await signupUser(fullName, email, password);
-      alert("Signup successful! Please log in.");
-      // Removed auto redirect to dashboard
-      setFullName("");
-      setEmail("");
-      setPassword("");
+
+      // ✅ Signup success → redirect to login
+      alert("Signup successful! Please log in to continue.");
+      navigate("/login");
     } catch (err) {
       console.error("Signup error:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Signup failed");
